@@ -191,36 +191,6 @@
   <button id="save-username">Save</button>
 </div>
 
-<!-- ===== PRO SETTINGS UI (TARUH DI SINI) ===== -->
-<div id="pro-controls" style="margin-top:6px;">
-  <button id="open-settings" style="display:none;">⚙️ Settings</button>
-  <button id="unlock-pro" style="display:none;">Unlock PRO</button>
-</div>
-
-<div id="settings-box"
-     style="display:none;
-            background:rgba(0,0,0,0.8);
-            padding:10px;
-            border-radius:10px;
-            margin-top:6px;">
-  <label>
-    Speed
-    <input type="range" min="0.6" max="2.0" step="0.1" id="set-speed">
-  </label><br>
-
-  <label>
-    Pipe Gap
-    <input type="range" min="180" max="260" step="10" id="set-gap">
-  </label><br>
-
-  <label>
-    Pipe Distance
-    <input type="range" min="140" max="220" step="10" id="set-interval">
-  </label><br>
-
-  <button id="save-settings">Save</button>
-</div>
-</div>
 
   <div id="top-buttons">
     <button id="toggle-lb">Top 10 Flyers</button>
@@ -267,57 +237,7 @@
   <div id="copyright">
     © 2024 Xmas Flappy Reindeer — deployed by @hc7690 (Discord)
   </div>
-<!-- ===== PRO CONFIRM MODAL ===== -->
-<div id="pro-modal" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.7);
-  z-index:999;
-  align-items:center;
-  justify-content:center;
-">
-  <div style="
-    background:#0f172a;
-    color:white;
-    padding:18px;
-    border-radius:12px;
-    width:90%;
-    max-width:360px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.5);
-  ">
-    <h3 style="margin-bottom:10px;color:#facc15;">
-      🚀 Unlock PRO
-    </h3>
 
-    <ul style="font-size:14px;margin-bottom:12px;">
-      <li>⚡ Custom speed & pipe settings</li>
-      <li>🎮 Difficulty control</li>
-      <li>💾 Saved settings</li>
-    </ul>
-
-    <p style="font-size:13px;color:#f87171;margin-bottom:10px;">
-      ⚠️ PRO unlock requires a one-time on-chain transaction fee.
-    </p>
-
-    <label style="font-size:13px;display:flex;gap:8px;margin-bottom:12px;">
-      <input type="checkbox" id="pro-agree">
-      I understand and agree to pay the transaction fee
-    </label>
-
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button id="pro-cancel" style="background:#334155;">
-        Cancel
-      </button>
-      <button id="pro-confirm" disabled style="
-        background:#22c55e;
-        opacity:0.5;
-      ">
-        Confirm
-      </button>
-    </div>
-  </div>
-</div>
 
   <script type="module">
 
@@ -326,32 +246,7 @@ function usernameKey(addr) {
   return `xmas_username_${addr.toLowerCase()}`;
 }
 
-// ===== PRO ACCESS CONTRACT =====
-const PRO_CONTRACT = "0x38Bc7E09B7Fe5eAC88db60997393c5476BE9dEa1";
 
-const PRO_ABI = [
-  {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
-    name: "isPro",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "buyPro",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
     // >>>>>>> GANTI DENGAN ADDRESS KONTRAK V2 BARU <<<<<<
     const CONTRACT_ADDRESS = "0x4035E22038e7CAEe45B6524d969B30B11326A3d1";
 
@@ -416,7 +311,7 @@ const usernameDisplay = document.getElementById("username-display");
 const usernameText = document.getElementById("username-text");
 
 function lockUsername(name) {
-  usernameText.textContent = isProUser ? `${name} ⭐` : name;
+  usernameText.textContent = name;
   usernameDisplay.style.display = "inline";
   usernameInput.style.display = "none";
   saveUsernameBtn.style.display = "none";
@@ -425,7 +320,6 @@ function lockUsername(name) {
 // ===== LOBBY DEFAULT (BELUM CONNECT WALLET) =====
 function setLobbyDisconnected() {
   document.getElementById("username-box").style.display = "none";
-  document.getElementById("pro-controls").style.display = "none";
   document.getElementById("toggle-lb").style.display = "none";
   document.getElementById("leaderboard").style.display = "none";
 
@@ -444,82 +338,13 @@ document.getElementById("leaderboard").addEventListener(
 // ===== LOBBY SETELAH CONNECT WALLET =====
 function setLobbyConnected() {
   document.getElementById("username-box").style.display = "flex";
-  document.getElementById("pro-controls").style.display = "block";
+  
   document.getElementById("toggle-lb").style.display = "inline-block";
 
 document.getElementById("score-box").style.display = "block";
 }
 
-const proModal = document.getElementById("pro-modal");
-const proAgree = document.getElementById("pro-agree");
-const proConfirm = document.getElementById("pro-confirm");
-const proCancel = document.getElementById("pro-cancel");
-
-proConfirm.onclick = async () => {
-  try {
-    closeProModal();
-
-    const data = window.viem.encodeFunctionData({
-      abi: PRO_ABI,
-      functionName: "buyPro",
-    });
-
-    const txHash = await window.ethereum.request({
-      method: "eth_sendTransaction",
-      params: [{
-        from: account,
-        to: PRO_CONTRACT,
-        data,
-        value: "0x4563918244F40000"
-      }]
-    });
-
-    alert("Tx sent 🚀 Waiting confirmation...");
-
-    // ⏳ tunggu sebentar (RPC lag)
-    setTimeout(async () => {
-      isProUser = await publicClient.readContract({
-        address: PRO_CONTRACT,
-        abi: PRO_ABI,
-        functionName: "isPro",
-        args: [account],
-      });
-
-      if (isProUser) {
-        applyGameSettingsByRole();
-
-        document.getElementById("open-settings").style.display = "inline-block";
-        document.getElementById("unlock-pro").style.display = "none";
-
-        alert("🎉 PRO unlocked! Settings enabled.");
-      }
-    }, 4000); // 4 detik aman
-  } catch (e) {
-    alert("Transaksi dibatalkan");
-  }
-};
-
-// buka modal
-function openProModal() {
-  proModal.style.display = "flex";
-  proAgree.checked = false;
-  proConfirm.disabled = true;
-  proConfirm.style.opacity = "0.5";
-}
-
-// tutup modal
-function closeProModal() {
-  proModal.style.display = "none";
-}
-
-// enable confirm jika setuju
-proAgree.onchange = () => {
-  proConfirm.disabled = !proAgree.checked;
-  proConfirm.style.opacity = proAgree.checked ? "1" : "0.5";
-};
-
-proCancel.onclick = closeProModal;
-
+        
     // ======= GAME STATE =======
     let state = "idle"; // idle, countdown, playing, gameover
     let countdown = 0;  // dalam detik
@@ -531,15 +356,15 @@ proCancel.onclick = closeProModal;
     let pipes = [];
     let snowflakes = [];
     let frame = 0;
-
     let playerBest = 0;    // best score on-chain
     let walletClient, publicClient, account;
     let walletConnected = false;
-    let isProUser = false; // status PRO user
-
     let username = "";
     let leaderboardData = [];
     let showFullLeaderboard = false;
+let gameSpeed = 1.0;
+let pipeGap = 200;
+let pipeInterval = 160;
 
 function updateMyRank(entries) {
   const box = document.getElementById("my-rank-box");
@@ -637,28 +462,6 @@ async function loadLeaderboard() {
     const PIPE_GAP = 200;
     const PIPE_INTERVAL = 160;
 
-// ===== PRO GAME SETTINGS (LOCAL) =====
-let gameSettings = {
-  pipeSpeed: PIPE_SPEED,
-  pipeGap: PIPE_GAP,
-  pipeInterval: PIPE_INTERVAL,
-};
-
-const saved = localStorage.getItem("xmas_settings");
-if (saved) {
-  gameSettings = JSON.parse(saved);
-}
-
-// ===== APPLY SETTINGS BASED ON ROLE =====
-function applyGameSettingsByRole() {
-  if (!isProUser) {
-    // 🔒 NON-PRO → PAKSA DEFAULT
-    gameSettings.pipeSpeed = PIPE_SPEED;
-    gameSettings.pipeGap = PIPE_GAP;
-    gameSettings.pipeInterval = PIPE_INTERVAL;
-  }
-  // PRO → pakai localStorage
-}
 
     // ==== IMAGE & SOUND ====
     const santaImg = new Image();
@@ -845,6 +648,12 @@ function applyGameSettingsByRole() {
       ctx.fillText(n.toString(), 200, 260);
     }
 
+function updateDifficulty(score) {
+  gameSpeed = Math.min(1 + score * 0.005, 1.5);
+  pipeGap = Math.max(220 - score * 0.3, 170);
+  pipeInterval = Math.max(200 - score * 0.3, 150);
+}
+
     // ======= GAME LOOP =======
     function gameLoop() {
       ctx.clearRect(0, 0, 400, 600);
@@ -936,7 +745,7 @@ function applyGameSettingsByRole() {
 
       const effectiveInterval = Math.max(
   50,
-  Math.round(gameSettings.pipeInterval / gameSettings.pipeSpeed)
+  Math.round(pipeInterval / gameSpeed)
 );
 
 if (frame % effectiveInterval === 0) {
@@ -944,19 +753,20 @@ if (frame % effectiveInterval === 0) {
         pipes.push({
           x: 410,
           top: gapTop,
-          bottom: 600 - gapTop - gameSettings.pipeGap,
+          bottom: 600 - gapTop - pipeGap,
           passed: false,
         });
       }
 
       pipes = pipes.filter((p) => {
-        p.x -= gameSettings.pipeSpeed;
+        p.x -= gameSpeed;
 
         if (p.x < -70) return false;
 
         if (p.x + 70 < bird.x && !p.passed) {
           score++;
-          document.getElementById("score").textContent = score;
+updateDifficulty(score);
+document.getElementById("score").textContent = score;
           p.passed = true;
           playSafe(scoreSound);
         }
@@ -964,14 +774,14 @@ if (frame % effectiveInterval === 0) {
         if (
           bird.x - 40 < p.x + 65 &&
           bird.x + 40 > p.x &&
-          (bird.y - 30 < p.top || bird.y + 30 > p.top + gameSettings.pipeGap)
+          (bird.y - 30 < p.top || bird.y + 30 > p.top + pipeGap)
         ) {
           state = "gameover";
           playSafe(hitSound);
         }
 
         drawCandyPipe(p.x, 0, 65, p.top);
-        drawCandyPipe(p.x, p.top + gameSettings.pipeGap, 65, p.bottom);
+        drawCandyPipe(p.x, p.top + pipeGap, 65, p.bottom);
 
         return true;
       });
@@ -1001,6 +811,9 @@ if (frame % effectiveInterval === 0) {
       frame = 0;
       score = 0;
       document.getElementById("score").textContent = "0";
+gameSpeed = 1.0;
+pipeGap = 200;
+pipeInterval = 160;
 
       countdown = 3; // detik
       state = "countdown";
@@ -1072,24 +885,7 @@ document.getElementById("toggle-lb").textContent =
           chain: somnia,
           transport: http(somnia.rpcUrls.default.http[0]),
         });
-// cek PRO status
-isProUser = await publicClient.readContract({
-  address: PRO_CONTRACT,
-  abi: PRO_ABI,
-  functionName: "isPro",
-  args: [account],
-});
-console.log("Is PRO user:", isProUser);
 
-applyGameSettingsByRole();
-
-if (isProUser) {
-  document.getElementById("open-settings").style.display = "inline-block";
-  document.getElementById("unlock-pro").style.display = "none";
-} else {
-  document.getElementById("unlock-pro").style.display = "inline-block";
-  document.getElementById("open-settings").style.display = "none";
-}
 
         if (account && account.length > 10) {
           walletConnected = true;
@@ -1300,51 +1096,6 @@ lockUsername(username);
 
     submitBtn.onclick = submitScoreToChain;
 
-// ===== SAVE PRO SETTINGS =====
-document.getElementById("save-settings").onclick = () => {
-  if (!isProUser) return alert("PRO only");
-
-  gameSettings.pipeSpeed =
-    Number(document.getElementById("set-speed").value);
-
-  gameSettings.pipeGap =
-    Number(document.getElementById("set-gap").value);
-
-  gameSettings.pipeInterval =
-    Number(document.getElementById("set-interval").value);
-
-  localStorage.setItem("xmas_settings", JSON.stringify(gameSettings));
-  document.getElementById("settings-box").style.display = "none";
-alert("Settings saved ✅");
-};
-// ===== OPEN / CLOSE PRO SETTINGS =====
-document.getElementById("open-settings").onclick = () => {
-  if (!isProUser) {
-    alert("PRO only");
-    return;
-  }
-
-  const box = document.getElementById("settings-box");
-  const isOpen = box.style.display === "block";
-
-  box.style.display = isOpen ? "none" : "block";
-
-  // sync slider dengan nilai aktif
-  document.getElementById("set-speed").value = gameSettings.pipeSpeed;
-  document.getElementById("set-gap").value = gameSettings.pipeGap;
-  document.getElementById("set-interval").value = gameSettings.pipeInterval;
-};
-
-// ===== UNLOCK PRO BUTTON =====
-document.getElementById("unlock-pro").onclick = async () => {
-  if (!walletConnected) {
-    alert("Connect wallet dulu");
-    return;
-  }
-
-  // ❌ JANGAN ADA TX DI SINI
-  openProModal(); // ✅ CUMA INI
-};
 
 gameLoop();
   </script>
