@@ -41,12 +41,6 @@ body {
 /* ======================
    CANVAS CENTER WRAPPER
 ====================== */
-#canvas-wrapper {
-  width:100%;
-  padding-top:90px;
-  padding-bottom:80px;
-}
-
 canvas {
   width: 100%;
   max-width: 420px;
@@ -212,11 +206,21 @@ h2, h3 {
 /* ======================
    GAME STAGE CENTER
 ====================== */
-#game-stage {
-  width:100%;
-  max-width:420px;
-  margin:0 auto;
-  min-height:100vh;
+#game-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 420px;
+  padding-top: 40px;
+}
+
+#game {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
 }
   </style>
 </head>
@@ -275,10 +279,8 @@ h2, h3 {
     <button id="restart-game">Start</button>
   </div>
 
-  <div id="game-stage">
-  <div id="canvas-wrapper">
-    <canvas id="game" width="400" height="600"></canvas>
-  </div>
+  <div id="game-container">
+  <canvas id="game" width="400" height="600"></canvas>
 </div>
 
   
