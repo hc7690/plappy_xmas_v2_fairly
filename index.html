@@ -25,28 +25,49 @@
   </script>
 
   <style>
-    * {
+    /* ======================
+   RESET
+====================== */
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
 body {
-  background:#0a1a3f;
-  overflow:hidden;
-  font-family:Arial, sans-serif;
-  color:white;
+  background: #0a1a3f;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  color: white;
 }
 
 /* ======================
-   CANVAS CENTER WRAPPER
+   GAME CONTAINER (CENTER FIX)
 ====================== */
-canvas {
-  width: 100%;
-  max-width: 420px;
+#game-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none; /* UI di atas tetap bisa diklik */
+}
+
+/* ======================
+   CANVAS (LOCK RATIO)
+====================== */
+#game {
+  width: min(420px, 100vw);
+  aspect-ratio: 2 / 3;   /* 400x600 */
   height: auto;
-  display: block;
   border-radius: 12px;
+  display: block;
+  pointer-events: auto; /* canvas tetap bisa klik */
 }
 
 /* ======================
@@ -187,40 +208,6 @@ h2, h3 {
   padding: 4px 8px;
   border-radius: 6px;
   z-index: 10;
-}
-
-/* ======================
-   DESKTOP TWEAK
-====================== */
-@media (min-width: 768px) {
-  #canvas-wrapper {
-    padding-top: 110px;
-    padding-bottom: 90px;
-  }
-
-  button {
-    font-size: 15px;
-  }
-}
-
-/* ======================
-   GAME STAGE CENTER
-====================== */
-#game-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 420px;
-  padding-top: 40px;
-}
-
-#game {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;
 }
   </style>
 </head>
