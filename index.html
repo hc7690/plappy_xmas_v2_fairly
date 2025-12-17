@@ -209,73 +209,143 @@ h2, h3 {
   border-radius: 6px;
   z-index: 10;
 }
+/* ======================
+   HEADER BAR
+====================== */
+#header-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+}
+
+#header-bar button {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* ======================
+   HUD SCORE
+====================== */
+#ui {
+  position: fixed;
+  top: 64px; /* JARAK DARI HEADER */
+  left: 12px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ======================
+   MOBILE TWEAK
+====================== */
+@media (max-width: 480px) {
+  #ui h2 {
+    font-size: 20px;
+  }
+
+  #ui h3 {
+    font-size: 15px;
+    opacity: 0.9;
+  }
+
+  #unlock-pro {
+    margin-top: 6px;
+    align-self: flex-start;
+  }
+}
   </style>
 </head>
 <body>
-  <div id="ui">
-  <button id="connect">Connect Wallet</button>
-  <div id="score-box">
-  <h2>Score: <span id="score">0</span></h2>
-  <h3>Best: <span id="best">0</span></h3>
-  </div>
 
-  <!-- username mini box (sekarang di dalam #ui) -->
-  <div id="username-box">
-  <span id="username-display" style="display:none;font-size:13px;">
-    👋Hallo, <b id="username-text"></b>
-  </span>
-
-  <input id="username-input" placeholder="username" maxlength="20" />
-  <button id="save-username">Save</button>
-</div>
-
-
-  <div id="top-buttons">
+  <!-- ======================
+       HEADER BAR (TOP)
+  ======================= -->
+  <div id="header-bar">
+    <button id="connect">Connect Wallet</button>
     <button id="toggle-lb">Top 10 Flyers</button>
   </div>
- <div id="leaderboard">
-  <h3 id="lb-title">Top 10 Flyers</h3>
 
-  <!-- YOUR RANK BOX -->
-  <div id="my-rank-box" style="
-    background:rgba(255,215,0,0.12);
-    border:1px solid rgba(255,215,0,0.35);
-    border-radius:8px;
-    padding:8px;
-    font-size:13px;
-    margin-bottom:8px;
-    display:none;
-  ">
-    <div style="font-size:11px;color:#facc15;margin-bottom:2px;">
-      🏅 Your Rank
+  <!-- ======================
+       HUD / SCORE AREA
+  ======================= -->
+  <div id="ui">
+
+    <div id="score-box">
+      <h2>Score: <span id="score">0</span></h2>
+      <h3>Best: <span id="best">0</span></h3>
     </div>
-    <div id="my-rank-text" style="font-weight:bold;"></div>
+
+    <!-- USERNAME -->
+    <div id="username-box">
+      <span id="username-display" style="display:none;font-size:13px;">
+        👋 Hallo, <b id="username-text"></b>
+      </span>
+
+      <input id="username-input" placeholder="username" maxlength="20" />
+      <button id="save-username">Save</button>
+    </div>
+
   </div>
 
-  <button id="toggle-full-lb"
-          style="display:none;margin-bottom:8px;width:100%;">
-    View Full Leaderboard
-  </button>
+  <!-- ======================
+       LEADERBOARD PANEL
+  ======================= -->
+  <div id="leaderboard">
+    <h3 id="lb-title">Top 10 Flyers</h3>
 
-  <ol id="lb-list"></ol>
-</div>
+    <!-- YOUR RANK -->
+    <div id="my-rank-box" style="
+      background:rgba(255,215,0,0.12);
+      border:1px solid rgba(255,215,0,0.35);
+      border-radius:8px;
+      padding:8px;
+      font-size:13px;
+      margin-bottom:8px;
+      display:none;
+    ">
+      <div style="font-size:11px;color:#facc15;margin-bottom:2px;">
+        🏅 Your Rank
+      </div>
+      <div id="my-rank-text" style="font-weight:bold;"></div>
+    </div>
 
-  <!-- tombol ketika idle / game over -->
+    <button id="toggle-full-lb"
+            style="display:none;margin-bottom:8px;width:100%;">
+      View Full Leaderboard
+    </button>
+
+    <ol id="lb-list"></ol>
+  </div>
+
+  <!-- ======================
+       GAME OVER BUTTONS
+  ======================= -->
   <div id="gameover-buttons">
     <button id="submit-score">Submit Score</button>
     <button id="restart-game">Start</button>
   </div>
 
+  <!-- ======================
+       GAME CANVAS (CENTER)
+  ======================= -->
   <div id="game-container">
-  <canvas id="game" width="400" height="600"></canvas>
-</div>
+    <canvas id="game" width="400" height="600"></canvas>
+  </div>
 
-  
-
+  <!-- ======================
+       COPYRIGHT
+  ======================= -->
   <div id="copyright">
     © 2024 Xmas Flappy Reindeer — deployed by @hc7690 (Discord)
   </div>
 
+</body>
 
   <script type="module">
 
