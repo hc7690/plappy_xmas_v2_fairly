@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xmas Flappy Santa - Somnia</title>
+
+  <!-- VIEM ke window.viem -->
+  <script type="module">
+    import {
+      createPublicClient,
+      createWalletClient,
+      custom,
+      http,
+      encodeFunctionData,
+    } from "https://cdn.jsdelivr.net/npm/viem@2.0.0/+esm";
+
+    window.viem = {
+      createPublicClient,
+      createWalletClient,
+      custom,
+      http,
+      encodeFunctionData,
+    };
+  </script>
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#0a1a3f;
+      overflow:hidden;
+      font-family:Arial, sans-serif;
+      color:white;
+    }
+
+    #canvas-wrapper{
+      width:100%;
+      max-width:420px;
+      margin:0 auto;
+      padding-top:80px;
+      padding-bottom:60px;
+    }
+    canvas {
+      display:block;
+      margin:0 auto;
+      width:100%;
+      height:auto;
+      border-radius:12px;
+    }
+
+    #ui {
+      position:fixed;
+      top:10px;
+      left:10px;
+      z-index:10;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    #top-buttons {
+      position:fixed;
+      top:10px;
+      right:10px;
+      z-index:10;
+      display:flex;
+      gap:10px;
+    }
+
+    #leaderboard {
+      position:fixed;
+      top:70px;
+      right:10px;
+      background:rgba(0,0,0,0.85);
+      padding:15px;
+      border-radius:10px;
+      max-width:280px;
+      display:none;
+      z-index:12;
+    }
+
+    /* box username kecil */
+    #username-box {
+  position:static;          /* ikut layout di dalam #ui */
+  display:flex;
+  gap:4px;
+  align-items:center;
+  margin-top:4px;           /* jarak sedikit dari Best */
+}
+#username-input {
+  padding:4px 8px;
+  font-size:11px;
+  border-radius:999px;
+  border:none;
+  outline:none;
+  max-width:120px;
+}
+#save-username {
+  padding:5px 8px;
+  font-size:11px;
+  border-radius:999px;
+  border:none;
+  background:#16a34a;
+  color:white;
+  cursor:pointer;
+}
+
+    /* tombol game over (Submit & Restart) */
+    #gameover-buttons {
+  position:fixed;
+  bottom:18%;              /* tombol nempel di bawah modal, bukan di tengah */
+  left:50%;
+  transform:translateX(-50%);
+  z-index:12;
+  display:none;
+  gap:10px;
+}
+
+    button {
+      padding:8px 14px;
+      font-size:14px;
+      background:#c41e3a;
+      color:white;
+      border:none;
+      border-radius:999px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    h2,h3 { margin:0; text-shadow:0 0 4px rgba(0,0,0,0.7); }
+    ol { font-size:13px; padding-left:18px; margin:8px 0 0; }
+
+    #copyright {
+      position:fixed;
+      bottom:8px;
+      left:50%;
+      transform:translateX(-50%);
+      font-size:11px;
+      color:#ccc;
+      background:rgba(0,0,0,0.5);
+      padding:4px 8px;
+      border-radius:6px;
+      z-index:5;
+    }
+
+    @media (min-width:768px){
+      #canvas-wrapper{ padding-top:90px; padding-bottom:80px; }
+      button{ font-size:15px; }
+    }
+
+
+
+/* SCROLL AREA */
+#lb-list {
+  max-height: 320px;       /* ⬅ tinggi scroll */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* scrollbar lebih halus (optional) */
+#lb-list::-webkit-scrollbar {
+  width: 6px;
+}
+#lb-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 6px;
+}
+
+#lb-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+  </style>
+</head>
+<body>
+  <div id="ui">
+  <button id="connect">Connect Wallet</button>
+  <div id="score-box">
+  <h2>Score: <span id="score">0</span></h2>
+  <h3>Best: <span id="best">0</span></h3>
+  </div>
+
+  <!-- username mini box (sekarang di dalam #ui) -->
+  <div id="username-box">
+  <span id="username-display" style="display:none;font-size:13px;">
+    👋Hallo, <b id="username-text"></b>
+  </span>
+
+  <input id="username-input" placeholder="username" maxlength="20" />
+  <button id="save-username">Save</button>
+</div>
+
+<!-- ===== PRO SETTINGS UI (TARUH DI SINI) ===== -->
+<div id="pro-controls" style="margin-top:6px;">
+  <button id="open-settings" style="display:none;">⚙️ Settings</button>
+  <button id="unlock-pro" style="display:none;">Unlock PRO</button>
+</div>
+
+<div id="settings-box"
+     style="display:none;
+            background:rgba(0,0,0,0.8);
+            padding:10px;
+            border-radius:10px;
+            margin-top:6px;">
+  <label>
+    Speed
+    <input type="range" min="0.6" max="2.0" step="0.1" id="set-speed">
+  </label><br>
+
+  <label>
+    Pipe Gap
+    <input type="range" min="180" max="260" step="10" id="set-gap">
+  </label><br>
+
+  <label>
+    Pipe Distance
+    <input type="range" min="140" max="220" step="10" id="set-interval">
+  </label><br>
+
+  <button id="save-settings">Save</button>
+</div>
+</div>
+
+  <div id="top-buttons">
+    <button id="toggle-lb">Top 10 Flyers</button>
+  </div>
+ <div id="leaderboard">
+  <h3 id="lb-title">Top 10 Flyers</h3>
+
+  <!-- YOUR RANK BOX -->
+  <div id="my-rank-box" style="
+    background:rgba(255,215,0,0.12);
+    border:1px solid rgba(255,215,0,0.35);
+    border-radius:8px;
+    padding:8px;
+    font-size:13px;
+    margin-bottom:8px;
+    display:none;
+  ">
+    <div style="font-size:11px;color:#facc15;margin-bottom:2px;">
+      🏅 Your Rank
+    </div>
+    <div id="my-rank-text" style="font-weight:bold;"></div>
+  </div>
+
+  <button id="toggle-full-lb"
+          style="display:none;margin-bottom:8px;width:100%;">
+    View Full Leaderboard
+  </button>
+
+  <ol id="lb-list"></ol>
+</div>
+
+  <!-- tombol ketika idle / game over -->
+  <div id="gameover-buttons">
+    <button id="submit-score">Submit Score</button>
+    <button id="restart-game">Start</button>
+  </div>
+
+  <div id="canvas-wrapper">
+    <canvas id="game" width="400" height="600"></canvas>
+  </div>
+
+  
+
+  <div id="copyright">
+    © 2024 Xmas Flappy Reindeer — deployed by @hc7690 (Discord)
+  </div>
+<!-- ===== PRO CONFIRM MODAL ===== -->
+<div id="pro-modal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#0f172a;
+    color:white;
+    padding:18px;
+    border-radius:12px;
+    width:90%;
+    max-width:360px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  ">
+    <h3 style="margin-bottom:10px;color:#facc15;">
+      🚀 Unlock PRO
+    </h3>
+
+    <ul style="font-size:14px;margin-bottom:12px;">
+      <li>⚡ Custom speed & pipe settings</li>
+      <li>🎮 Difficulty control</li>
+      <li>💾 Saved settings</li>
+    </ul>
+
+    <p style="font-size:13px;color:#f87171;margin-bottom:10px;">
+      ⚠️ PRO unlock requires a one-time on-chain transaction fee.
+    </p>
+
+    <label style="font-size:13px;display:flex;gap:8px;margin-bottom:12px;">
+      <input type="checkbox" id="pro-agree">
+      I understand and agree to pay the transaction fee
+    </label>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="pro-cancel" style="background:#334155;">
+        Cancel
+      </button>
+      <button id="pro-confirm" disabled style="
+        background:#22c55e;
+        opacity:0.5;
+      ">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+  <script type="module">
+
+// ===== USERNAME STORAGE HELPER (WAJIB PALING ATAS) =====
+function usernameKey(addr) {
+  return `xmas_username_${addr.toLowerCase()}`;
+}
+
+// ===== PRO ACCESS CONTRACT =====
+const PRO_CONTRACT = "0x38Bc7E09B7Fe5eAC88db60997393c5476BE9dEa1";
+
+const PRO_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "isPro",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "buyPro",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "withdraw",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+];
+    // >>>>>>> GANTI DENGAN ADDRESS KONTRAK V2 BARU <<<<<<
+    const CONTRACT_ADDRESS = "0x4035E22038e7CAEe45B6524d969B30B11326A3d1";
+
+    const ABI = [
+      {
+        inputs:[{ internalType:"string", name:"name", type:"string" }],
+        name:"setUsername",
+        outputs:[],
+        stateMutability:"nonpayable",
+        type:"function"
+      },
+      {
+        inputs:[{ internalType:"uint256", name:"_score", type:"uint256" }],
+        name:"submitScore",
+        outputs:[],
+        stateMutability:"nonpayable",
+        type:"function"
+      },
+      {
+        inputs:[],
+        name:"getLeaderboard",
+        outputs:[{
+          components:[
+            { internalType:"address", name:"player", type:"address" },
+            { internalType:"uint256", name:"score", type:"uint256" },
+            { internalType:"uint256", name:"timestamp", type:"uint256" },
+            { internalType:"string",  name:"username", type:"string" }
+          ],
+          internalType:"struct XmasFlappyLeaderboard.Player[]",
+          name:"",
+          type:"tuple[]"
+        }],
+        stateMutability:"view",
+        type:"function"
+      },
+      {
+        inputs:[{ internalType:"address", name:"player", type:"address" }],
+        name:"getPlayerBest",
+        outputs:[{ internalType:"uint256", name:"", type:"uint256" }],
+        stateMutability:"view",
+        type:"function"
+      },
+      {
+        inputs:[{ internalType:"address", name:"player", type:"address" }],
+        name:"getUsername",
+        outputs:[{ internalType:"string", name:"", type:"string" }],
+        stateMutability:"view",
+        type:"function"
+      }
+    ];
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const gameoverButtons = document.getElementById("gameover-buttons");
+    const submitBtn = document.getElementById("submit-score");
+    const restartBtn = document.getElementById("restart-game");
+
+    const usernameInput = document.getElementById("username-input");
+    const saveUsernameBtn = document.getElementById("save-username");
+const usernameDisplay = document.getElementById("username-display");
+const usernameText = document.getElementById("username-text");
+
+function lockUsername(name) {
+  usernameText.textContent = isProUser ? `${name} ⭐` : name;
+  usernameDisplay.style.display = "inline";
+  usernameInput.style.display = "none";
+  saveUsernameBtn.style.display = "none";
+}
+
+// ===== LOBBY DEFAULT (BELUM CONNECT WALLET) =====
+function setLobbyDisconnected() {
+  document.getElementById("username-box").style.display = "none";
+  document.getElementById("pro-controls").style.display = "none";
+  document.getElementById("toggle-lb").style.display = "none";
+  document.getElementById("leaderboard").style.display = "none";
+
+document.getElementById("score-box").style.display = "none";
+}
+
+// panggil sekali di awal
+setLobbyDisconnected();
+
+document.getElementById("leaderboard").addEventListener(
+  "touchmove",
+  (e) => e.stopPropagation(),
+  { passive: false }
+);
+
+// ===== LOBBY SETELAH CONNECT WALLET =====
+function setLobbyConnected() {
+  document.getElementById("username-box").style.display = "flex";
+  document.getElementById("pro-controls").style.display = "block";
+  document.getElementById("toggle-lb").style.display = "inline-block";
+
+document.getElementById("score-box").style.display = "block";
+}
+
+const proModal = document.getElementById("pro-modal");
+const proAgree = document.getElementById("pro-agree");
+const proConfirm = document.getElementById("pro-confirm");
+const proCancel = document.getElementById("pro-cancel");
+
+proConfirm.onclick = async () => {
+  try {
+    closeProModal();
+
+    const data = window.viem.encodeFunctionData({
+      abi: PRO_ABI,
+      functionName: "buyPro",
+    });
+
+    const txHash = await window.ethereum.request({
+      method: "eth_sendTransaction",
+      params: [{
+        from: account,
+        to: PRO_CONTRACT,
+        data,
+        value: "0x4563918244F40000"
+      }]
+    });
+
+    alert("Tx sent 🚀 Waiting confirmation...");
+
+    // ⏳ tunggu sebentar (RPC lag)
+    setTimeout(async () => {
+      isProUser = await publicClient.readContract({
+        address: PRO_CONTRACT,
+        abi: PRO_ABI,
+        functionName: "isPro",
+        args: [account],
+      });
+
+      if (isProUser) {
+        applyGameSettingsByRole();
+
+        document.getElementById("open-settings").style.display = "inline-block";
+        document.getElementById("unlock-pro").style.display = "none";
+
+        alert("🎉 PRO unlocked! Settings enabled.");
+      }
+    }, 4000); // 4 detik aman
+  } catch (e) {
+    alert("Transaksi dibatalkan");
+  }
+};
+
+// buka modal
+function openProModal() {
+  proModal.style.display = "flex";
+  proAgree.checked = false;
+  proConfirm.disabled = true;
+  proConfirm.style.opacity = "0.5";
+}
+
+// tutup modal
+function closeProModal() {
+  proModal.style.display = "none";
+}
+
+// enable confirm jika setuju
+proAgree.onchange = () => {
+  proConfirm.disabled = !proAgree.checked;
+  proConfirm.style.opacity = proAgree.checked ? "1" : "0.5";
+};
+
+proCancel.onclick = closeProModal;
+
+    // ======= GAME STATE =======
+    let state = "idle"; // idle, countdown, playing, gameover
+    let countdown = 0;  // dalam detik
+
+    let score = 0;
+    let best = 0;
+
+    let bird = { x: 110, y: 300, vy: 0 };
+    let pipes = [];
+    let snowflakes = [];
+    let frame = 0;
+
+    let playerBest = 0;    // best score on-chain
+    let walletClient, publicClient, account;
+    let walletConnected = false;
+    let isProUser = false; // status PRO user
+
+    let username = "";
+    let leaderboardData = [];
+    let showFullLeaderboard = false;
+
+function updateMyRank(entries) {
+  const box = document.getElementById("my-rank-box");
+  const text = document.getElementById("my-rank-text");
+
+  if (!walletConnected || !account || !entries || entries.length === 0) {
+    box.style.display = "none";
+    return;
+  }
+
+  const addr = account.toLowerCase();
+  const index = entries.findIndex(
+    (p) => String(p.player ?? p[0]).toLowerCase() === addr
+  );
+
+  box.style.display = "block";
+
+  if (index === -1) {
+    text.textContent = "Not ranked yet";
+    return;
+  }
+
+  const p = entries[index];
+  const pts = Number(p.score ?? p[1]);
+  const uname = (p.username ?? p[3]) || "";
+  const shortAddr = addr.slice(0, 6) + "..." + addr.slice(-4);
+  const displayName = uname && uname.length ? uname : shortAddr;
+
+  text.textContent = `#${index + 1} ${displayName} — ${pts} pts`;
+}
+
+function renderLeaderboard(entries) {
+  const list = document.getElementById("lb-list");
+  list.innerHTML = "";
+
+  if (!entries || entries.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No scores yet.";
+    list.appendChild(li);
+    return;
+  }
+
+  const limit = showFullLeaderboard ? entries.length : 10;
+
+  entries.slice(0, limit).forEach((p, i) => {
+    const addr = String(p.player ?? p[0]);
+    const pts = Number(p.score ?? p[1]);
+    const uname = (p.username ?? p[3]) || "";
+    const shortAddr = addr.slice(0, 6) + "..." + addr.slice(-4);
+    const displayName = uname || shortAddr;
+
+    const rank = i + 1; // ✅ GLOBAL RANK
+
+    const li = document.createElement("li");
+    li.textContent = `#${rank} ${displayName} — ${pts} pts`;
+    list.appendChild(li);
+  });
+}
+
+async function loadLeaderboard() {
+  if (!publicClient) return;
+
+  try {
+    leaderboardData = await publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: "getLeaderboard",
+    });
+
+    updateMyRank(leaderboardData);   // 👈 TAMBAH INI
+    renderLeaderboard(leaderboardData);
+  } catch (e) {
+    console.error("loadLeaderboard error", e);
+    const list = document.getElementById("lb-list");
+    list.innerHTML = "";
+    const li = document.createElement("li");
+    li.textContent = "Failed to load leaderboard.";
+    list.appendChild(li);
+  }
+}
+
+    const somnia = {
+      id: 5031n,
+      name: "Somnia Mainnet",
+      rpcUrls: {
+        default: {
+          http: ["https://api.infra.mainnet.somnia.network"],
+        },
+      },
+    };
+
+    const PIPE_SPEED = 1.0;
+    const GRAVITY = 0.28;
+    const FLAP_POWER = -7.8;
+    const PIPE_GAP = 200;
+    const PIPE_INTERVAL = 160;
+
+// ===== PRO GAME SETTINGS (LOCAL) =====
+let gameSettings = {
+  pipeSpeed: PIPE_SPEED,
+  pipeGap: PIPE_GAP,
+  pipeInterval: PIPE_INTERVAL,
+};
+
+const saved = localStorage.getItem("xmas_settings");
+if (saved) {
+  gameSettings = JSON.parse(saved);
+}
+
+// ===== APPLY SETTINGS BASED ON ROLE =====
+function applyGameSettingsByRole() {
+  if (!isProUser) {
+    // 🔒 NON-PRO → PAKSA DEFAULT
+    gameSettings.pipeSpeed = PIPE_SPEED;
+    gameSettings.pipeGap = PIPE_GAP;
+    gameSettings.pipeInterval = PIPE_INTERVAL;
+  }
+  // PRO → pakai localStorage
+}
+
+    // ==== IMAGE & SOUND ====
+    const santaImg = new Image();
+    santaImg.src = "santa.png";
+    let santaLoaded = false;
+    santaImg.onload = () => { santaLoaded = true; };
+
+    const SANTA_WIDTH = 70;
+    const SANTA_HEIGHT = 70;
+
+    let bgMusic, flapSound, hitSound, scoreSound;
+    let musicStarted = false;
+
+    function safeAudio(src, loop=false, volume=1){
+      const a = new Audio();
+      a.src = src;
+      a.loop = loop;
+      a.volume = volume;
+      return a;
+    }
+
+    try {
+      bgMusic    = safeAudio("bg-music.mp3", true, 0.4);
+      flapSound  = safeAudio("flap.wav", false, 0.7);
+      hitSound   = safeAudio("hit.wav", false, 0.9);
+      scoreSound = safeAudio("score.wav", false, 0.7);
+    } catch(e) {
+      console.warn("Audio init error", e);
+    }
+
+    function playSafe(audioObj){
+      if (!audioObj) return;
+      const a = audioObj.cloneNode();
+      a.volume = audioObj.volume;
+      a.play().catch(()=>{});
+    }
+
+    function startMusicOnce(){
+      if (musicStarted || !bgMusic) return;
+      musicStarted = true;
+      bgMusic.play().catch(()=>{});
+    }
+
+    // ===== DRAWING =====
+
+    function drawSantaVector(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.fillStyle = "#B22222";
+      ctx.beginPath();
+      ctx.moveTo(-30, 15);
+      ctx.lineTo(20, 15);
+      ctx.lineTo(26, 5);
+      ctx.lineTo(-24, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#8B0000";
+      ctx.fillRect(-26, 5, 8, 10);
+      ctx.strokeStyle = "#FFD700";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-30, 15);
+      ctx.lineTo(20, 15);
+      ctx.stroke();
+      ctx.strokeStyle = "#C0C0C0";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-28, 18);
+      ctx.quadraticCurveTo(-20, 24, -10, 22);
+      ctx.quadraticCurveTo(5, 20, 22, 24);
+      ctx.stroke();
+      ctx.fillStyle = "#FF0000";
+      ctx.fillRect(-8, -10, 16, 18);
+      ctx.fillStyle = "#FCD7B6";
+      ctx.beginPath();
+      ctx.arc(0, -16, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FF0000";
+      ctx.beginPath();
+      ctx.moveTo(-7, -19);
+      ctx.lineTo(0, -28);
+      ctx.lineTo(7, -19);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(0, -28, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, -20, 7.5, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-5, -12);
+      ctx.quadraticCurveTo(0, -6, 5, -12);
+      ctx.quadraticCurveTo(0, -3, -5, -12);
+      ctx.fill();
+      ctx.fillStyle = "#006400";
+      ctx.beginPath();
+      ctx.ellipse(-20, -2, 10, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawSantaImg(x, y) {
+      if (santaLoaded) {
+        ctx.drawImage(
+          santaImg,
+          x - SANTA_WIDTH / 2,
+          y - SANTA_HEIGHT / 2,
+          SANTA_WIDTH,
+          SANTA_HEIGHT
+        );
+      } else {
+        drawSantaVector(x, y);
+      }
+    }
+
+    function drawCandyPipe(x, y, w, h) {
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = "#DC143C";
+      for (let i = 0; i < h; i += 26) {
+        ctx.fillRect(x, y + i, w, 13);
+      }
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(x + 15, y + 15);
+      ctx.quadraticCurveTo(x + 35, y + h / 2, x + 15, y + h - 15);
+      ctx.stroke();
+    }
+
+    function drawBackground() {
+      const grad = ctx.createLinearGradient(0, 0, 0, 600);
+      grad.addColorStop(0, "#020617");
+      grad.addColorStop(0.5, "#1e3a8a");
+      grad.addColorStop(1, "#082f49");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 400, 600);
+      ctx.fillStyle = "#fff";
+      for (let i = 0; i < 40; i++) {
+        ctx.fillRect((i * 137.5) % 400, (i * 61) % 400, 2, 2);
+      }
+    }
+
+    function drawStart() {
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      ctx.fillRect(50, 150, 300, 300);
+      ctx.fillStyle = "#FFD700";
+      ctx.font = "bold 30px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Xmas Flappy Santa", 200, 220);
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Connect wallet & set name", 200, 280);
+      ctx.fillText("Press Start to play", 200, 315);
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "rgba(0,0,0,0.8)";
+      ctx.fillRect(40, 120, 320, 360);
+      ctx.fillStyle = "#c41e3a";
+      ctx.font = "bold 36px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over", 200, 190);
+      ctx.fillStyle = "white";
+      ctx.font = "bold 24px Arial";
+      ctx.fillText(`Score: ${score}`, 200, 240);
+      ctx.fillText(`Best: ${best}`, 200, 275);
+      ctx.font = "18px Arial";
+      ctx.fillText("Use 'Submit Score' to record", 200, 320);
+      ctx.fillText("'Restart' to play again", 200, 350);
+    }
+
+    function drawCountdown() {
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(0, 0, 400, 600);
+      ctx.fillStyle = "#FFD700";
+      ctx.font = "bold 64px Arial";
+      ctx.textAlign = "center";
+      const n = Math.ceil(countdown);
+      ctx.fillText(n.toString(), 200, 260);
+    }
+
+    // ======= GAME LOOP =======
+    function gameLoop() {
+      ctx.clearRect(0, 0, 400, 600);
+      frame++;
+
+      drawBackground();
+
+      // snow
+      if (frame % 2 === 0) {
+        snowflakes.push({
+          x: Math.random() * 400,
+          y: -5,
+          s: Math.random() * 3 + 1.5,
+          vy: Math.random() * 0.4 + 0.4,
+        });
+      }
+      snowflakes = snowflakes.filter((s) => {
+        s.y += s.vy;
+        s.x += Math.sin(frame * 0.01 + s.y) * 0.3;
+        return s.y < 610;
+      });
+      snowflakes.forEach((s) => {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.s, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // STATE HANDLING
+      if (state === "idle") {
+        drawStart();
+        // drawSantaImg(bird.x, bird.y);
+
+        // tombol: hanya Restart (label Start), submit disembunyiin
+        gameoverButtons.style.display = "flex";
+        submitBtn.style.display = "none";
+        restartBtn.textContent = "Start";
+
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      if (state === "countdown") {
+        drawSantaImg(bird.x, bird.y);
+
+        gameoverButtons.style.display = "none";
+
+        drawCountdown();
+        countdown -= 1/60; // kira2 60 fps
+
+        if (countdown <= 0) {
+          state = "playing";
+        }
+
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      if (state === "gameover") {
+        drawGameOver();
+        // drawSantaImg(bird.x, bird.y);
+
+        gameoverButtons.style.display = "flex";
+        restartBtn.textContent = "Restart";
+        // submit hanya muncul kalau bisa submit
+        if (walletConnected && score > playerBest) {
+          submitBtn.style.display = "inline-block";
+        } else {
+          submitBtn.style.display = "none";
+        }
+
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      // ==== PLAYING ====
+      gameoverButtons.style.display = "none";
+
+      bird.vy *= 0.96;
+      bird.vy += GRAVITY;
+      bird.y += bird.vy;
+
+      if (bird.y < 15 || bird.y > 570) {
+        state = "gameover";
+        playSafe(hitSound);
+      }
+
+      drawSantaImg(bird.x, bird.y);
+
+      const effectiveInterval = Math.max(
+  50,
+  Math.round(gameSettings.pipeInterval / gameSettings.pipeSpeed)
+);
+
+if (frame % effectiveInterval === 0) {
+        const gapTop = 80 + Math.random() * 210;
+        pipes.push({
+          x: 410,
+          top: gapTop,
+          bottom: 600 - gapTop - gameSettings.pipeGap,
+          passed: false,
+        });
+      }
+
+      pipes = pipes.filter((p) => {
+        p.x -= gameSettings.pipeSpeed;
+
+        if (p.x < -70) return false;
+
+        if (p.x + 70 < bird.x && !p.passed) {
+          score++;
+          document.getElementById("score").textContent = score;
+          p.passed = true;
+          playSafe(scoreSound);
+        }
+
+        if (
+          bird.x - 40 < p.x + 65 &&
+          bird.x + 40 > p.x &&
+          (bird.y - 30 < p.top || bird.y + 30 > p.top + gameSettings.pipeGap)
+        ) {
+          state = "gameover";
+          playSafe(hitSound);
+        }
+
+        drawCandyPipe(p.x, 0, 65, p.top);
+        drawCandyPipe(p.x, p.top + gameSettings.pipeGap, 65, p.bottom);
+
+        return true;
+      });
+
+      if (score > best) {
+        best = score;
+        document.getElementById("best").textContent = best;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ====== START / RESTART ======
+    function startOrRestart() {
+      if (!walletConnected) {
+        alert("Please connect your Somnia wallet first.");
+        return;
+      }
+
+      startMusicOnce();
+
+      // reset state game
+      bird.y = 300;
+      bird.vy = 0;
+      pipes = [];
+      snowflakes = [];
+      frame = 0;
+      score = 0;
+      document.getElementById("score").textContent = "0";
+
+      countdown = 3; // detik
+      state = "countdown";
+    }
+
+    // ===== FLAP (hanya saat playing) =====
+    function flap() {
+      if (state !== "playing") return;
+      bird.vy = FLAP_POWER;
+      playSafe(flapSound);
+    }
+
+    canvas.addEventListener("click", flap);
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        flap();
+      }
+    });
+
+    restartBtn.onclick = startOrRestart;
+
+    // ===== WALLET & USERNAME =====
+    document.getElementById("toggle-lb").onclick = () => {
+  const box = document.getElementById("leaderboard");
+  const fullBtn = document.getElementById("toggle-full-lb");
+
+  const willShow =
+    box.style.display === "none" || box.style.display === "";
+
+  box.style.display = willShow ? "block" : "none";
+  fullBtn.style.display = willShow ? "inline-block" : "none";
+
+  if (willShow) loadLeaderboard();
+};
+document.getElementById("toggle-full-lb").onclick = () => {
+  showFullLeaderboard = !showFullLeaderboard;
+
+  document.getElementById("toggle-full-lb").textContent =
+    showFullLeaderboard ? "Show Top 10 Only" : "View Full Leaderboard";
+
+document.getElementById("lb-title").textContent =
+  showFullLeaderboard ? "🏆 Full Leaderboard" : "🔥Top 10 Flyers";
+
+document.getElementById("toggle-lb").textContent =
+  showFullLeaderboard ? "🏆 Full Leaderboard" : "🔥Top 10 Flyers";
+
+
+
+  renderLeaderboard(leaderboardData);
+};
+    document.getElementById("connect").onclick = async () => {
+      if (!window.viem) return alert("Loading... coba lagi");
+      const { createWalletClient, custom, createPublicClient, http } = window.viem;
+
+      if (!window.ethereum) return alert("Install MetaMask dulu, bro!");
+
+      try {
+        walletClient = createWalletClient({
+          chain: somnia,
+          transport: custom(window.ethereum),
+        });
+
+        await walletClient.switchChain({ id: 5031n });
+
+        [account] = await walletClient.requestAddresses();
+
+        publicClient = createPublicClient({
+          chain: somnia,
+          transport: http(somnia.rpcUrls.default.http[0]),
+        });
+// cek PRO status
+isProUser = await publicClient.readContract({
+  address: PRO_CONTRACT,
+  abi: PRO_ABI,
+  functionName: "isPro",
+  args: [account],
+});
+console.log("Is PRO user:", isProUser);
+
+applyGameSettingsByRole();
+
+if (isProUser) {
+  document.getElementById("open-settings").style.display = "inline-block";
+  document.getElementById("unlock-pro").style.display = "none";
+} else {
+  document.getElementById("unlock-pro").style.display = "inline-block";
+  document.getElementById("open-settings").style.display = "none";
+}
+
+        if (account && account.length > 10) {
+          walletConnected = true;
+
+          document.getElementById("connect").textContent =
+            `${account.slice(0, 6)}...${account.slice(-4)}`;
+
+          // best score
+          playerBest = Number(
+            await publicClient.readContract({
+              address: CONTRACT_ADDRESS,
+              abi: ABI,
+              functionName: "getPlayerBest",
+              args: [account],
+            })
+          );
+          best = Math.max(best, playerBest);
+          document.getElementById("best").textContent = best;
+
+          // username on-chain
+          const onChainName = await publicClient.readContract({
+            address: CONTRACT_ADDRESS,
+            abi: ABI,
+            functionName: "getUsername",
+            args: [account],
+          });
+
+          const key = usernameKey(account);
+
+if (onChainName && onChainName.length > 0) {
+  username = onChainName;
+  localStorage.setItem(key, username);
+  lockUsername(username);
+} else {
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    username = saved;
+    lockUsername(username);
+  } else {
+    usernameInput.value = "";
+    usernameInput.style.display = "inline-block";
+    saveUsernameBtn.style.display = "inline-block";
+    usernameDisplay.style.display = "none";
+  }
+}
+setLobbyConnected();
+        } else {
+          alert("Wallet connect gagal");
+        }
+      } catch (e) {
+        console.error(e);
+        alert(`Connect error: ${e.message}`);
+      }
+    };
+
+    saveUsernameBtn.onclick = async () => {
+      const name = usernameInput.value.trim();
+      if (!walletConnected) {
+        alert("Connect wallet dulu.");
+        return;
+      }
+      if (!name) {
+        alert("Username tidak boleh kosong.");
+        return;
+      }
+      if (name.length > 20) {
+        alert("Max 20 karakter.");
+        return;
+      }
+
+      try {
+        username = name;
+        localStorage.setItem(usernameKey(account), username);
+
+        const { encodeFunctionData } = window.viem;
+        const data = encodeFunctionData({
+          abi: ABI,
+          functionName: "setUsername",
+          args: [username],
+        });
+
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: account,
+              to: CONTRACT_ADDRESS,
+              data,
+            },
+          ],
+        });
+
+        alert(`Username saved: ${username}\nTx: ${txHash.slice(0,12)}...`);
+lockUsername(username);
+      } catch (e) {
+        console.error(e);
+        alert(`Set username gagal: ${e.message}`);
+      }
+    };
+
+    async function ensureUsernameOnChain() {
+      if (!walletConnected || !window.ethereum) {
+        alert("Wallet not connected.");
+        return false;
+      }
+
+      let name = usernameInput.value.trim() || username;
+      if (!name) {
+        name = prompt("Enter username (max 20 chars):") || "";
+        name = name.trim();
+        if (!name) return false;
+        if (name.length > 20) {
+          alert("Max 20 karakter.");
+          return false;
+        }
+        usernameInput.value = name;
+      }
+
+      username = name;
+      localStorage.setItem(usernameKey(account), username);
+
+      try {
+        const onChainName = await publicClient.readContract({
+          address: CONTRACT_ADDRESS,
+          abi: ABI,
+          functionName: "getUsername",
+          args: [account],
+        });
+
+        if (onChainName && onChainName.length > 0 && onChainName === username) {
+          return true;
+        }
+
+        const { encodeFunctionData } = window.viem;
+        const data = encodeFunctionData({
+          abi: ABI,
+          functionName: "setUsername",
+          args: [username],
+        });
+
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: account,
+              to: CONTRACT_ADDRESS,
+              data,
+            },
+          ],
+        });
+
+        alert(`Username saved: ${username}\nTx: ${txHash.slice(0,12)}...`);
+        return true;
+      } catch (e) {
+        console.error(e);
+        alert(`Set username gagal: ${e.message}`);
+        return false;
+      }
+    }
+
+    
+
+    async function submitScoreToChain() {
+      if (!walletConnected || !window.ethereum) {
+        alert("Wallet not connected.");
+        return;
+      }
+      if (score <= playerBest) {
+        alert("Your score is not higher than your best on-chain score.");
+        return;
+      }
+
+      const ok = confirm(`Submit score ${score} to on-chain leaderboard?`);
+      if (!ok) return;
+
+      const okName = await ensureUsernameOnChain();
+      if (!okName) return;
+
+      try {
+        const { encodeFunctionData } = window.viem;
+        const data = encodeFunctionData({
+          abi: ABI,
+          functionName: "submitScore",
+          args: [BigInt(score)],
+        });
+
+        const txHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: account,
+              to: CONTRACT_ADDRESS,
+              data,
+            },
+          ],
+        });
+
+        alert(`Score ${score} submitted! Tx: ${txHash.slice(0, 12)}...`);
+        playerBest = score;
+        best = Math.max(best, playerBest);
+        document.getElementById("best").textContent = best;
+        await loadLeaderboard();
+      } catch (e) {
+        console.error(e);
+        alert(`Submit gagal: ${e.message}`);
+      }
+    }
+
+    submitBtn.onclick = submitScoreToChain;
+
+// ===== SAVE PRO SETTINGS =====
+document.getElementById("save-settings").onclick = () => {
+  if (!isProUser) return alert("PRO only");
+
+  gameSettings.pipeSpeed =
+    Number(document.getElementById("set-speed").value);
+
+  gameSettings.pipeGap =
+    Number(document.getElementById("set-gap").value);
+
+  gameSettings.pipeInterval =
+    Number(document.getElementById("set-interval").value);
+
+  localStorage.setItem("xmas_settings", JSON.stringify(gameSettings));
+  document.getElementById("settings-box").style.display = "none";
+alert("Settings saved ✅");
+};
+// ===== OPEN / CLOSE PRO SETTINGS =====
+document.getElementById("open-settings").onclick = () => {
+  if (!isProUser) {
+    alert("PRO only");
+    return;
+  }
+
+  const box = document.getElementById("settings-box");
+  const isOpen = box.style.display === "block";
+
+  box.style.display = isOpen ? "none" : "block";
+
+  // sync slider dengan nilai aktif
+  document.getElementById("set-speed").value = gameSettings.pipeSpeed;
+  document.getElementById("set-gap").value = gameSettings.pipeGap;
+  document.getElementById("set-interval").value = gameSettings.pipeInterval;
+};
+
+// ===== UNLOCK PRO BUTTON =====
+document.getElementById("unlock-pro").onclick = async () => {
+  if (!walletConnected) {
+    alert("Connect wallet dulu");
+    return;
+  }
+
+  // ❌ JANGAN ADA TX DI SINI
+  openProModal(); // ✅ CUMA INI
+};
+
+gameLoop();
+  </script>
+</body>
+</html>
