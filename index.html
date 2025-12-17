@@ -649,9 +649,9 @@ async function loadLeaderboard() {
     }
 
 function updateDifficulty(score) {
-  gameSpeed = Math.min(1 + score * 0.005, 1.5);
-  pipeGap = Math.max(220 - score * 0.3, 170);
-  pipeInterval = Math.max(200 - score * 0.3, 150);
+  gameSpeed = Math.min(1 + score * 0.004, 1.45);
+  pipeGap = Math.max(220 - score * 0.6, 150);
+  pipeInterval = Math.max(200 - score * 0.5, 140);
 }
 
     // ======= GAME LOOP =======
@@ -749,7 +749,10 @@ function updateDifficulty(score) {
 );
 
 if (frame % effectiveInterval === 0) {
-        const gapTop = 80 + Math.random() * 210;
+        const centerY = 300;
+const variance = Math.max(60 - score * 0.5, 20);
+let gapTop = centerY - pipeGap / 2 + (Math.random() * variance - variance / 2);
+gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
         pipes.push({
           x: 410,
           top: gapTop,
@@ -764,12 +767,12 @@ if (frame % effectiveInterval === 0) {
         if (p.x < -70) return false;
 
         if (p.x + 70 < bird.x && !p.passed) {
-          score++;
-updateDifficulty(score);
-document.getElementById("score").textContent = score;
-          p.passed = true;
-          playSafe(scoreSound);
-        }
+  score++;
+  updateDifficulty(score);   // ✅ INI YANG BENAR
+  document.getElementById("score").textContent = score;
+  p.passed = true;
+  playSafe(scoreSound);
+}
 
         if (
           bird.x - 40 < p.x + 65 &&
