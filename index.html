@@ -263,12 +263,15 @@ h2, h3 {
 /* ===== DESKTOP TWEAK ===== */
 @media (min-width: 900px) {
   #game {
-    width: 520px;        /* desktop lebih gede */
+    height: 90vh;        /* kunci tinggi */
+    width: auto;         /* biar proporsional */
+    max-width: 520px;    /* batas biar ga kegedean */
     aspect-ratio: 2 / 3; /* TETAP portrait */
   }
 
   #game-container {
     align-items: center;
+    justify-content: center;
   }
 
   body {
