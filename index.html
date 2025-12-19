@@ -783,7 +783,7 @@ let pipeGap = PIPE_GAP;
 function updateSpeedByScore(score) {
   const BASE_SPEED = 1.0;
   const SPEED_STEP = 0.03;   // naik pelan
-  const MAX_SPEED  = 2.2;    // cap biar gak absurd
+  const MAX_SPEED  = 2.6;    // cap biar gak absurd
 
   gameSpeed = Math.min(
     BASE_SPEED + score * SPEED_STEP,
