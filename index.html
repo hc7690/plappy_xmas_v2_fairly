@@ -462,7 +462,7 @@ document.getElementById("score-box").style.display = "block";
     let bird = { x: 110, y: 300, vy: 0 };
     let pipes = [];
     let snowflakes = [];
-    let frame = 0;
+    let frame = 0; // ✅ WAJIB ADA
     let playerBest = 0;    // best score on-chain
     let walletClient, publicClient, account;
     let walletConnected = false;
@@ -561,15 +561,16 @@ async function loadLeaderboard() {
       },
     };
 
-   
+   const PIPE_DISTANCE = 180; // jarak horizontal ideal
+let pipeSpawnX = 0;
     const GRAVITY = 0.28;
     const FLAP_POWER = -7.8;
     const PIPE_GAP = 200;
-    const PIPE_INTERVAL = 160;
+    
 
 let gameSpeed = 1.0;
 let pipeGap = PIPE_GAP;
-let pipeInterval = PIPE_INTERVAL;
+
 
     // ==== IMAGE & SOUND ====
     const santaImg = new Image();
@@ -858,9 +859,13 @@ function updateSpeedByScore(score) {
 
       
 
-if (frame % pipeInterval === 0) {
+pipeSpawnX += gameSpeed;
+
+if (pipeSpawnX >= PIPE_DISTANCE) {
+  pipeSpawnX = 0;
+
   const centerY = 300;
-  const variance = 40; // FIX, gak tergantung score
+  const variance = 40;
 
   let gapTop =
     centerY - pipeGap / 2 +
@@ -931,7 +936,8 @@ if (frame % pipeInterval === 0) {
       document.getElementById("score").textContent = "0";
 gameSpeed = 1.0;
 pipeGap = PIPE_GAP;
-pipeInterval = PIPE_INTERVAL;
+
+pipeSpawnX = 0;
 
       countdown = 3; // detik
       state = "countdown";
