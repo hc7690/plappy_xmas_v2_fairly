@@ -469,9 +469,7 @@ document.getElementById("score-box").style.display = "block";
     let username = "";
     let leaderboardData = [];
     let showFullLeaderboard = false;
-let gameSpeed = 1.0;
-let pipeGap = 200;
-let pipeInterval = 160;
+
 
 function updateMyRank(entries) {
   const box = document.getElementById("my-rank-box");
@@ -563,12 +561,15 @@ async function loadLeaderboard() {
       },
     };
 
-    const PIPE_SPEED = 1.0;
+   
     const GRAVITY = 0.28;
     const FLAP_POWER = -7.8;
     const PIPE_GAP = 200;
     const PIPE_INTERVAL = 160;
 
+let gameSpeed = 1.0;
+let pipeGap = PIPE_GAP;
+let pipeInterval = PIPE_INTERVAL;
 
     // ==== IMAGE & SOUND ====
     const santaImg = new Image();
@@ -755,10 +756,15 @@ async function loadLeaderboard() {
       ctx.fillText(n.toString(), 200, 260);
     }
 
-function updateDifficulty(score) {
-  gameSpeed = Math.min(1 + score * 0.004, 1.45);
-  pipeGap = Math.max(220 - score * 0.6, 150);
-  pipeInterval = Math.max(200 - score * 0.5, 140);
+function updateSpeedByScore(score) {
+  const BASE_SPEED = 1.0;
+  const SPEED_STEP = 0.03;   // naik pelan
+  const MAX_SPEED  = 2.2;    // cap biar gak absurd
+
+  gameSpeed = Math.min(
+    BASE_SPEED + score * SPEED_STEP,
+    MAX_SPEED
+  );
 }
 
     // ======= GAME LOOP =======
@@ -850,23 +856,25 @@ function updateDifficulty(score) {
 
       drawSantaImg(bird.x, bird.y);
 
-      const effectiveInterval = Math.max(
-  50,
-  Math.round(pipeInterval / gameSpeed)
-);
+      
 
-if (frame % effectiveInterval === 0) {
-        const centerY = 300;
-const variance = Math.max(60 - score * 0.5, 20);
-let gapTop = centerY - pipeGap / 2 + (Math.random() * variance - variance / 2);
-gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
-        pipes.push({
-          x: 410,
-          top: gapTop,
-          bottom: 600 - gapTop - pipeGap,
-          passed: false,
-        });
-      }
+if (frame % pipeInterval === 0) {
+  const centerY = 300;
+  const variance = 40; // FIX, gak tergantung score
+
+  let gapTop =
+    centerY - pipeGap / 2 +
+    (Math.random() * variance - variance / 2);
+
+  gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
+
+  pipes.push({
+    x: 410,
+    top: gapTop,
+    bottom: 600 - gapTop - pipeGap,
+    passed: false,
+  });
+}
 
       pipes = pipes.filter((p) => {
         p.x -= gameSpeed;
@@ -875,7 +883,7 @@ gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
 
         if (p.x + 70 < bird.x && !p.passed) {
   score++;
-  updateDifficulty(score);   // ✅ INI YANG BENAR
+  updateSpeedByScore(score);   // ✅ BENAR
   document.getElementById("score").textContent = score;
   p.passed = true;
   playSafe(scoreSound);
@@ -922,8 +930,8 @@ gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
       score = 0;
       document.getElementById("score").textContent = "0";
 gameSpeed = 1.0;
-pipeGap = 200;
-pipeInterval = 160;
+pipeGap = PIPE_GAP;
+pipeInterval = PIPE_INTERVAL;
 
       countdown = 3; // detik
       state = "countdown";
