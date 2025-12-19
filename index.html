@@ -259,6 +259,22 @@ h2, h3 {
     align-self: flex-start;
   }
 }
+
+/* ===== DESKTOP TWEAK ===== */
+@media (min-width: 900px) {
+  #game {
+    width: 800px;
+    aspect-ratio: 3 / 2; /* landscape feel */
+  }
+
+  #game-container {
+    align-items: center;
+  }
+
+  body {
+    background: radial-gradient(circle, #020617 0%, #000 80%);
+  }
+}
   </style>
 </head>
 <body>
@@ -422,6 +438,10 @@ function lockUsername(name) {
   usernameDisplay.style.display = "inline";
   usernameInput.style.display = "none";
   saveUsernameBtn.style.display = "none";
+}
+
+function isDesktop() {
+  return window.matchMedia("(min-width: 900px)").matches;
 }
 
 // ===== LOBBY DEFAULT (BELUM CONNECT WALLET) =====
