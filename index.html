@@ -944,7 +944,11 @@ pipeInterval = PIPE_INTERVAL;
       playSafe(flapSound);
     }
 
-    canvas.addEventListener("click", flap);
+    canvas.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  flap();
+});
+
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
         e.preventDefault();
