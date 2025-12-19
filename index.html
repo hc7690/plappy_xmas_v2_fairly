@@ -469,7 +469,7 @@ document.getElementById("score-box").style.display = "block";
     let username = "";
     let leaderboardData = [];
     let showFullLeaderboard = false;
-
+    let lastGapTop = 200; // posisi awal
 
 function updateMyRank(entries) {
   const box = document.getElementById("my-rank-box");
@@ -865,12 +865,26 @@ if (pipeSpawnX >= PIPE_DISTANCE) {
   pipeSpawnX = 0;
 
   const minTop = 60;
-const maxTop = 600 - pipeGap - 60;
+  const maxTop = 600 - pipeGap - 60;
 
-let gapTop =
-  Math.random() * (maxTop - minTop) + minTop;
+  // 🔥 DIFFICULTY SCALING (INI JAWABAN PERTANYAAN LU)
+  const difficulty = Math.min(score * 1.5, 120);
+  const jump = 40 + Math.random() * difficulty;
 
-  gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
+  // arah naik / turun
+  const direction = Math.random() < 0.5 ? -1 : 1;
+
+  let target = lastGapTop + direction * jump;
+
+  // clamp biar aman
+  target = Math.max(minTop, Math.min(target, maxTop));
+
+  // smooth follow (flappy feel)
+  const smooth = 0.65;
+  const gapTop = lastGapTop + (target - lastGapTop) * smooth;
+
+  // simpan buat pipa berikutnya
+  lastGapTop = gapTop;
 
   pipes.push({
     x: 410,
@@ -935,8 +949,8 @@ let gapTop =
       document.getElementById("score").textContent = "0";
 gameSpeed = 1.0;
 pipeGap = PIPE_GAP;
-
 pipeSpawnX = 0;
+lastGapTop = 200; // reset posisi pipa awal
 
       countdown = 3; // detik
       state = "countdown";
