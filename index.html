@@ -864,12 +864,11 @@ pipeSpawnX += gameSpeed;
 if (pipeSpawnX >= PIPE_DISTANCE) {
   pipeSpawnX = 0;
 
-  const centerY = 300;
-  const variance = 40;
+  const minTop = 60;
+const maxTop = 600 - pipeGap - 60;
 
-  let gapTop =
-    centerY - pipeGap / 2 +
-    (Math.random() * variance - variance / 2);
+let gapTop =
+  Math.random() * (maxTop - minTop) + minTop;
 
   gapTop = Math.max(40, Math.min(gapTop, 600 - pipeGap - 40));
 
