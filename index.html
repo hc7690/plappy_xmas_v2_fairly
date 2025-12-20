@@ -279,6 +279,35 @@ h2, h3 {
     align-items: center;
   }
 }
+
+/* ======================
+   CANVAS FINAL (ANTI GEPENG)
+====================== */
+
+#game {
+  display: block;
+  border-radius: 12px;
+}
+
+/* MOBILE */
+@media (max-width: 899px) {
+  #game {
+    height: 90vh;
+    width: auto;
+    aspect-ratio: 2 / 3;
+    max-width: 420px;
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 900px) {
+  #game {
+    height: 85vh;
+    width: auto;
+    aspect-ratio: 2 / 3;
+    max-height: 720px;
+  }
+}
   </style>
 </head>
 <body>
