@@ -380,6 +380,23 @@ function usernameKey(addr) {
 
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+
+  const rect = canvas.getBoundingClientRect();
+  const cssHeight = rect.height;
+  const cssWidth = cssHeight * (2 / 3);
+
+  canvas.style.width = cssWidth + "px";
+  canvas.style.height = cssHeight + "px";
+
+  canvas.width = Math.round(cssWidth * dpr);
+  canvas.height = Math.round(cssHeight * dpr);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+resizeCanvas();
 
     const gameoverButtons = document.getElementById("gameover-buttons");
     const submitBtn = document.getElementById("submit-score");
@@ -401,6 +418,7 @@ function isDesktop() {
   return window.matchMedia("(min-width: 900px)").matches;
 }
 
+window.addEventListener("resize", resizeCanvas);
 // ===== LOBBY DEFAULT (BELUM CONNECT WALLET) =====
 function setLobbyDisconnected() {
   document.getElementById("username-box").style.display = "none";
