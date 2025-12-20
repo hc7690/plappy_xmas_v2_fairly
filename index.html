@@ -62,12 +62,9 @@ body {
    CANVAS (LOCK RATIO)
 ====================== */
 #game {
-  width: min(420px, 100vw);
-  aspect-ratio: 2 / 3;   /* 400x600 */
-  height: auto;
-  border-radius: 12px;
   display: block;
-  pointer-events: auto; /* canvas tetap bisa klik */
+  border-radius: 12px;
+  pointer-events: auto;
 }
 
 /* ======================
@@ -258,17 +255,24 @@ h2, h3 {
     margin-top: 6px;
     align-self: flex-start;
   }
+
+  /* ✅ TAMBAHAN KHUSUS CANVAS MOBILE */
+  #game {
+    width: 100vw;
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
 }
 
 /* ===== DESKTOP TWEAK (FINAL FIX, NO GEPENG) ===== */
 @media (min-width: 900px) {
+  @media (min-width: 900px) {
   #game {
-    height: 85vh;              /* kunci tinggi */
-    aspect-ratio: 2 / 3;       /* portrait FIX */
-    width: calc(85vh * 2 / 3); /* ⬅️ INI KUNCI UTAMA */
-    max-height: 720px;         /* optional safety */
-    max-width: 480px;          /* optional safety */
+    height: min(85vh, 720px);
+    width: calc(min(85vh, 720px) * 2 / 3);
+    aspect-ratio: 2 / 3;
   }
+}
 
   #game-container {
     justify-content: center;
