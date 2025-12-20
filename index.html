@@ -209,12 +209,10 @@ h2, h3 {
 ====================== */
 #gameover-buttons {
   position: fixed;
-  bottom: 18%;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, 120px);
   z-index: 25;
-  display: none;
-  gap: 10px;
 }
 
 /* ======================
@@ -419,6 +417,7 @@ function isDesktop() {
 }
 
 window.addEventListener("resize", resizeCanvas);
+
 // ===== LOBBY DEFAULT (BELUM CONNECT WALLET) =====
 function setLobbyDisconnected() {
   document.getElementById("username-box").style.display = "none";
@@ -727,20 +726,31 @@ let pipeGap = PIPE_GAP;
     }
 
     function drawGameOver() {
-      ctx.fillStyle = "rgba(0,0,0,0.8)";
-      ctx.fillRect(40, 120, 320, 360);
-      ctx.fillStyle = "#c41e3a";
-      ctx.font = "bold 36px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText("Game Over", 200, 190);
-      ctx.fillStyle = "white";
-      ctx.font = "bold 24px Arial";
-      ctx.fillText(`Score: ${score}`, 200, 240);
-      ctx.fillText(`Best: ${best}`, 200, 275);
-      ctx.font = "18px Arial";
-      ctx.fillText("Use 'Submit Score' to record", 200, 320);
-      ctx.fillText("'Restart' to play again", 200, 350);
-    }
+  const W = canvas.width / (window.devicePixelRatio || 1);
+  const H = canvas.height / (window.devicePixelRatio || 1);
+
+  const boxW = W * 0.8;
+  const boxH = H * 0.6;
+  const boxX = (W - boxW) / 2;
+  const boxY = (H - boxH) / 2;
+
+  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+
+  ctx.fillStyle = "#c41e3a";
+  ctx.font = "bold 36px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Game Over", W / 2, boxY + 70);
+
+  ctx.fillStyle = "white";
+  ctx.font = "bold 24px Arial";
+  ctx.fillText(`Score: ${score}`, W / 2, boxY + 130);
+  ctx.fillText(`Best: ${best}`, W / 2, boxY + 170);
+
+  ctx.font = "18px Arial";
+  ctx.fillText("Use Submit Score to record", W / 2, boxY + 230);
+  ctx.fillText("Restart to play again", W / 2, boxY + 270);
+}
 
     function drawCountdown() {
       ctx.fillStyle = "rgba(0,0,0,0.35)";
