@@ -25,7 +25,7 @@
   </script>
 
   <style>
-    /* ======================
+/* ======================
    RESET
 ====================== */
 * {
@@ -47,7 +47,7 @@ body {
 }
 
 /* ======================
-   GAME CONTAINER (CENTER FIX)
+   GAME CONTAINER (CENTER)
 ====================== */
 #game-container {
   position: fixed;
@@ -55,38 +55,77 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  pointer-events: none; /* UI di atas tetap bisa diklik */
+  pointer-events: none;
 }
 
 /* ======================
-   CANVAS (LOCK RATIO)
+   CANVAS (ANTI GEPENG)
 ====================== */
 #game {
   display: block;
   border-radius: 12px;
   pointer-events: auto;
+  aspect-ratio: 2 / 3; /* 400x600 */
 }
 
 /* ======================
-   LEFT UI (SCORE, USER)
+   MOBILE (PORTRAIT)
+====================== */
+@media (max-width: 899px) {
+  #game {
+    height: 90vh;
+    width: auto;
+    max-width: 420px;
+  }
+}
+
+/* ======================
+   DESKTOP (BESAR TAPI NORMAL)
+====================== */
+@media (min-width: 900px) {
+  #game {
+    height: 85vh;
+    width: auto;
+    max-height: 720px;
+  }
+}
+
+/* ======================
+   HEADER BAR
+====================== */
+#header-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+}
+
+#header-bar button {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* ======================
+   HUD / SCORE / USER
 ====================== */
 #ui {
   position: fixed;
-  top: 12px;
+  top: 64px;
   left: 12px;
   z-index: 30;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 6px;
 }
 
-/* Username box */
 #username-box {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
 }
 
 #username-input {
@@ -109,15 +148,17 @@ body {
 }
 
 /* ======================
-   RIGHT TOP BUTTONS
+   BUTTON GLOBAL
 ====================== */
-#top-buttons {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 30;
-  display: flex;
-  gap: 8px;
+button {
+  padding: 8px 14px;
+  font-size: 14px;
+  background: #c41e3a;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 #connect {
@@ -128,8 +169,13 @@ body {
   background: #1d4ed8;
 }
 
+h2, h3 {
+  margin: 0;
+  text-shadow: 0 0 4px rgba(0,0,0,0.7);
+}
+
 /* ======================
-   LEADERBOARD PANEL
+   LEADERBOARD
 ====================== */
 #leaderboard {
   position: fixed;
@@ -147,7 +193,6 @@ body {
   max-height: 320px;
   overflow-y: auto;
   list-style: none;
-  padding-left: 0;
 }
 
 #lb-list::-webkit-scrollbar {
@@ -173,25 +218,6 @@ body {
 }
 
 /* ======================
-   BUTTON GLOBAL
-====================== */
-button {
-  padding: 8px 14px;
-  font-size: 14px;
-  background: #c41e3a;
-  color: white;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-h2, h3 {
-  margin: 0;
-  text-shadow: 0 0 4px rgba(0,0,0,0.7);
-}
-
-/* ======================
    COPYRIGHT
 ====================== */
 #copyright {
@@ -205,108 +231,6 @@ h2, h3 {
   padding: 4px 8px;
   border-radius: 6px;
   z-index: 10;
-}
-/* ======================
-   HEADER BAR
-====================== */
-#header-bar {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 40;
-  display: flex;
-  gap: 10px;
-}
-
-#header-bar button {
-  flex: 1;
-  padding: 10px;
-  font-size: 14px;
-}
-
-/* ======================
-   HUD SCORE
-====================== */
-#ui {
-  position: fixed;
-  top: 64px; /* JARAK DARI HEADER */
-  left: 12px;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* ======================
-   MOBILE TWEAK
-====================== */
-@media (max-width: 480px) {
-  #ui h2 {
-    font-size: 20px;
-  }
-
-  #ui h3 {
-    font-size: 15px;
-    opacity: 0.9;
-  }
-
-  #unlock-pro {
-    margin-top: 6px;
-    align-self: flex-start;
-  }
-
-  /* ✅ TAMBAHAN KHUSUS CANVAS MOBILE */
-  #game {
-    width: 100vw;
-    height: auto;
-    aspect-ratio: 2 / 3;
-  }
-}
-
-/* ===== DESKTOP TWEAK (FINAL FIX, NO GEPENG) ===== */
-@media (min-width: 900px) {
-  @media (min-width: 900px) {
-  #game {
-    height: min(85vh, 720px);
-    width: calc(min(85vh, 720px) * 2 / 3);
-    aspect-ratio: 2 / 3;
-  }
-}
-
-  #game-container {
-    justify-content: center;
-    align-items: center;
-  }
-}
-
-/* ======================
-   CANVAS FINAL (ANTI GEPENG)
-====================== */
-
-#game {
-  display: block;
-  border-radius: 12px;
-}
-
-/* MOBILE */
-@media (max-width: 899px) {
-  #game {
-    height: 90vh;
-    width: auto;
-    aspect-ratio: 2 / 3;
-    max-width: 420px;
-  }
-}
-
-/* DESKTOP */
-@media (min-width: 900px) {
-  #game {
-    height: 85vh;
-    width: auto;
-    aspect-ratio: 2 / 3;
-    max-height: 720px;
-  }
 }
   </style>
 </head>
